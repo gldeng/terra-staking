@@ -137,8 +137,8 @@ export default () => {
         return <></>;
 
     return (<PaperWrapper>
-        <WalletProvider {...chainOptions}>
+        {/* <WalletProvider {...chainOptions}> */}
             <WalletComponent />
-        </WalletProvider>
+        {/* </WalletProvider> */}
     </PaperWrapper>)
 };
