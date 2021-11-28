@@ -19,9 +19,9 @@ const bridgePaperStyles = (theme: Theme) => createStyles({
     margin: "70px auto 0",
     position: "relative",
     transition: "margin 1s ease-out",
-    [theme.breakpoints.up(depositNavigationBreakpoint)]: {
-      marginTop: 0,
-    },
+    // [theme.breakpoints.up(depositNavigationBreakpoint)]: {
+    //   marginTop: 0,
+    // },
   },
 });
 
