@@ -1,10 +1,7 @@
 import { Coin, LCDClient, MsgDelegate } from '@terra-money/terra.js';
 import { useConnectedWallet, useWallet } from '@terra-money/wallet-provider';
 import { useState } from 'react';
-
-// const ROCKX_VALIDATOR = 'terravaloper1aw0znxtlq0wrayyz7wppz3qnw94hfrmnnrcxja'; // Real ROCKX
-
-const ROCKX_VALIDATOR = 'terravaloper1krj7amhhagjnyg2tkkuh6l0550y733jnjnnlzy'; // Terra.One
+import { ROCKX_VALIDATOR } from './config';
 
 export function Stake() {
     const [amountToStake, setAmountToStake] = useState(0);

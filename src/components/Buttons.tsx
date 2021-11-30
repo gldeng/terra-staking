@@ -4,17 +4,28 @@
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-export const generatePlaceholderStyles = (color: string) => {
-  const placeholder = {
-    color,
-  };
+import React from 'react';
+import { Button, ButtonProps, styled } from '@mui/material';
 
-  return {
-    "&::placeholder": placeholder,
-    "&::-webkit-input-placeholder": placeholder,
-    "&::-moz-placeholder": placeholder, // Firefox 19+
-    "&:-ms-input-placeholder": placeholder, // IE 11
-    "&::-ms-input-placeholder": placeholder, // Edge
-  };
+export const ActionButton: React.FC<ButtonProps> = ({
+    color = "primary",
+    ...props
+}) => {
+    return (
+        <Button
+            sx={{ maxWidth: 360 }}
+            variant="contained"
+            size="large"
+            fullWidth
+            color={color}
+            {...props}
+        />
+    );
 };
 
+export const ActionButtonWrapper = styled("div")(() => ({
+    marginTop: 20,
+    display: "flex",
+    justifyContent: "center",
+    flexDirection: "row",
+}));

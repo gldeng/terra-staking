@@ -1,15 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import { ConnectType, useWallet, WalletControllerChainOptions, WalletStatus } from '@terra-money/wallet-provider';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ConnectType, useConnectedWallet, useWallet, WalletControllerChainOptions, WalletStatus } from '@terra-money/wallet-provider';
 import { Input, ExitToApp } from '@mui/icons-material';
-import { Box, Button, ButtonProps, Paper, Toolbar, styled, Typography, Link } from '@mui/material';
+import { Box, Button, ButtonProps, Paper, Toolbar, styled, Typography, Link, Theme, ButtonGroup, ToggleButton, Grid } from '@mui/material';
 import { Stake } from './Stake';
-import { BigCurrencyInput } from './BigCurrencyInput';
+import { BigCurrencyInput } from './components/BigCurrencyInput';
 import {
     WalletProvider,
     getChainOptions,
 } from '@terra-money/wallet-provider';
-import { LabelWithValue, MiddleEllipsisText } from './TypographyHelpers';
-import { PaperContent, PaperHeader } from './Paper';
+import { LabelWithValue, MiddleEllipsisText } from './components/TypographyHelpers';
+import { PaperContent, PaperHeader } from './components/Paper';
+import { LCDClient } from '@terra-money/terra.js';
+import useBank from './api/useBank';
+import * as format from './utils/format';
+import { AssetInfo } from './components/TypographyHelpers';
+import { LunaFullIcon } from './components/Icons';
+import * as math from './utils/math';
+import BigNumber from 'bignumber.js'
+import { createStyles, withStyles } from '@mui/styles';
+import * as customColors from './theme/colors';
+import { ROCKX_VALIDATOR } from './config';
+
+// const transition = "all 1s ease-out, border 0.5s ease-out";
+const depositNavigationBreakpoint = "md";
+
+const toggleButtonGroupStyles = (theme: Theme) => createStyles({
+    root: {
+        //   transition,
+        [theme.breakpoints.up(depositNavigationBreakpoint)]: {
+            background: customColors.whiteDarker,
+            borderRadius: 15,
+            borderColor: customColors.rockxBlue,
+            borderWidth: 'thin',
+        },
+        // margin: '0 auto',
+    },
+    grouped: {
+        //   transition,
+        [theme.breakpoints.up(depositNavigationBreakpoint)]: {
+            border: "solid",
+            borderColor: customColors.rockxBlue,
+            borderWidth: 'thin',
+            "&:first-child": {
+                borderTopLeftRadius: 15,
+                borderBottomLeftRadius: 15,
+            },
+            "&:last-child": {
+                borderTopRightRadius: 15,
+                borderBottomRightRadius: 15,
+            },
+            // "&:only-child": {
+            //     borderBottomLeftRadius: 20,
+            //     borderBottomRightRadius: 20,
+            // },
+            // "&:not(:first-child)": {
+            //     borderRadius: 46,
+            //     marginLeft: 12,
+            //     marginRight: 12,
+            //     marginTop: 12,
+            // },
+            // "&:last-child:not(:only-child)": {
+            //     marginBottom: 12,
+            // },
+        },
+    },
+});
+
+const StyledToggleButtonGroup = withStyles(toggleButtonGroupStyles)(ButtonGroup);
+
+const ButtonGroupWrapper = styled('div')({
+    // position:'center'
+    justifyContent: 'center'
+})
 
 const ActionButton: React.FC<ButtonProps> = ({
     color = "primary",
@@ -67,14 +129,52 @@ const WalletComponent: React.FC = () => {
     const wallet = useWallet();
     const { availableConnectTypes } = wallet;
     const connected = wallet.status === WalletStatus.WALLET_CONNECTED;
+    const address = wallet.wallets[0]?.terraAddress ?? '';
 
-    const [amount, setAmount] = useState(0);
+    const connectedWallet = useConnectedWallet();
+    const { chainID, lcd: URL } = connectedWallet?.network ?? { chainID: "", lcd: "" };
+    // const [balance, setBalance] = useState("NA");
+    const [bankLoading, setBankLoading] = useState(false);
+    // const lcd = useMemo(() => new LCDClient({ chainID, URL }), [chainID, URL])
+    // useEffect(()=>{
+    //     const fcd = (wallet.network as unknown as {fcd: string}).fcd;
+    //     !!fcd && !!address && fetch(`${fcd}/v1/bank/${address}`).then()
+    //     https://bombay-fcd.terra.dev/v1/bank/terra1kh6fktd34uudtxpndcqr5vc88z5xhu46ky2hpa?
+    // });
+
+    const bankExecuted = useRef(false);
+    const bank = useBank();
+    const ulunaBalance = bank.data?.balance?.find(b => b.denom === 'uluna')?.delegatable ?? '0';
+    const lunaBalance = format.amount(ulunaBalance, 6);
+    const availableLuna = new BigNumber(lunaBalance);
+    useEffect(() => {
+        if (!bankExecuted.current) {
+            bank.execute();
+            bankExecuted.current = true;
+        }
+    });
+
+    const [lunaAmount, setLunaAmount] = useState(0);
+    const [percentage, setPercentage] = useState("0%");
+    const [errorText, setErrorText] = useState("");
+    const checkAndSetAmount = (value: number) => {
+        setLunaAmount(value);
+        const x = math.div(new BigNumber(value), new BigNumber(lunaBalance));
+        const pct = math.percent(x === 'NaN' ? 0 : x);
+        setPercentage(pct);
+        if (math.gt(new BigNumber(value), new BigNumber(lunaBalance)))
+            setErrorText("Insufficient fund");
+        else
+            setErrorText("");
+    }
+    const presetValue = (pct: number) => {
+        const value = parseFloat(math.times(new BigNumber(pct), new BigNumber(lunaBalance)));
+        setLunaAmount(value);
+    }
     if (!availableConnectTypes.includes(ConnectType.EXTENSION))
         return <></>;
     return <>
-        <PaperHeader />
-        <PaperContent topPadding bottomPadding darker>
-            <Box pr={3} />
+        <PaperContent bottomPadding darker>
             <LabelWithValue
                 label="Your Address"
                 value={<MiddleEllipsisText>{wallet.wallets[0]?.terraAddress}</MiddleEllipsisText>}
@@ -82,28 +182,33 @@ const WalletComponent: React.FC = () => {
 
             <LabelWithValue
                 label="RockX Address"
-                value={<MiddleEllipsisText>{wallet.wallets[0]?.terraAddress}</MiddleEllipsisText>}
+                value={<MiddleEllipsisText>{ROCKX_VALIDATOR}</MiddleEllipsisText>}
             />
+            <AssetInfo
+                label={"Available to Stake"}
+                value={`${lunaBalance} Luna`}
+                Icon={<LunaFullIcon fontSize="inherit" />}
+            />
+            <Grid container justifyContent="center">
+                <Grid item xs={8}>
+                    <StyledToggleButtonGroup >
+                        <Button onClick={() => { presetValue(0.25) }}>25%</Button>
+                        <Button onClick={() => { presetValue(0.5) }}>55%</Button>
+                        <Button onClick={() => { presetValue(0.75) }}>75%</Button>
+                        <Button onClick={() => { presetValue(1) }}>100%</Button>
+                    </StyledToggleButtonGroup>
+                </Grid>
+            </Grid>
             <BigCurrencyInputWrapper>
                 <BigCurrencyInput
-                    onChange={() => { }}
-                    symbol={'uluna'}
-                    usdValue={'NA'}
-                    value={amount}
-                    errorText={''}
+                    onChange={checkAndSetAmount}
+                    symbol={'Luna'}
+                    usdValue={percentage}
+                    value={lunaAmount}
+                    errorText={errorText}
                 />
             </BigCurrencyInputWrapper>
 
-            {/* <AssetDropdownWrapper>
-          <AssetDropdown
-            label={'Wallet'}
-            blockchainLabel={'Terra'}
-            mode="chain"
-            available={true}
-            value={'a'}
-            onChange={()=>{}}
-          />
-        </AssetDropdownWrapper> */}
             {!connected &&
                 <ActionButtonWrapper>
                     <ActionButton onClick={() => wallet.connect(ConnectType.EXTENSION)} >Connect</ActionButton>
@@ -113,10 +218,9 @@ const WalletComponent: React.FC = () => {
             {/* <Stake /> */}
             {connected &&
                 <ActionButtonWrapper>
-                    <ActionButton onClick={() => { }} >Stake</ActionButton>
+                    <ActionButton disabled={!!errorText} onClick={() => { }} >Stake</ActionButton>
                 </ActionButtonWrapper>
             }
-            {/* {connected && <>{wallet.wallets[0]?.terraAddress}<DisconnectButton /></>} */}
         </PaperContent>
     </>;
 }
@@ -138,7 +242,7 @@ export default () => {
 
     return (<PaperWrapper>
         {/* <WalletProvider {...chainOptions}> */}
-            <WalletComponent />
+        <WalletComponent />
         {/* </WalletProvider> */}
     </PaperWrapper>)
 };

@@ -7,7 +7,8 @@
 
 body {
   color: var(--primary-foreground);
-  background-color: #f2f2f2;
+  /* background-color: #f2f2f2; */
+  background-color: #101c3d;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
