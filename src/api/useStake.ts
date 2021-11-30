@@ -1,8 +1,9 @@
 import { Coin, LCDClient, MsgDelegate } from '@terra-money/terra.js';
 import { useWallet } from '@terra-money/wallet-provider';
-import { useState, useCallback } from 'react'
+import { useState, useCallback, FC } from 'react'
 import { useAddress } from './useAddress';
 import { ROCKX_VALIDATOR } from '../config';
+import { Dialog } from '@mui/material';
 
 export default () => {
     const wallet = useWallet();
@@ -10,9 +11,11 @@ export default () => {
     const [data, setData] = useState(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<any>(null)
+    const [noted, setNoted] = useState(true)
     const execute = useCallback(async (ulunaAmount) => {
         try {
             setLoading(true)
+            setData(null)
             setError(null)
             if (!wallet)
                 setError('No valid wallet.');
@@ -26,9 +29,12 @@ export default () => {
             setData(data)
         } catch (error: any) {
             setError(error)
+        } finally {
+            setLoading(false)
+            setNoted(false)
         }
         // eslint-disable-next-line
     }, [address, wallet])
 
-    return { data, loading, error, execute }
+    return { data, loading, error, noted, setNoted, execute }
 }

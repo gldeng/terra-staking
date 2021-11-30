@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectType, useConnectedWallet, useWallet, WalletControllerChainOptions, WalletStatus } from '@terra-money/wallet-provider';
 import { Input, ExitToApp } from '@mui/icons-material';
-import { Box, Button, ButtonProps, Paper, Toolbar, styled, Typography, Link, Theme, ButtonGroup, ToggleButton, Grid } from '@mui/material';
+import { Box, Button, ButtonProps, Paper, Toolbar, styled, Typography, Link, Theme, ButtonGroup, ToggleButton, Grid, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { Stake } from './Stake';
 import { BigCurrencyInput } from './components/BigCurrencyInput';
 import {
@@ -21,6 +21,8 @@ import { createStyles, withStyles } from '@mui/styles';
 import * as customColors from './theme/colors';
 import { ROCKX_VALIDATOR } from './config';
 import useStake from './api/useStake';
+import { StakeStatus, StakeStatusProps, StakeStatusWrapper } from './components/StakeStatus';
+import { CopyContentButton } from './components/Buttons';
 
 // const transition = "all 1s ease-out, border 0.5s ease-out";
 const depositNavigationBreakpoint = "md";
@@ -136,7 +138,11 @@ const WalletComponent: React.FC = () => {
     const { chainID, lcd: URL } = connectedWallet?.network ?? { chainID: "", lcd: "" };
     // const [balance, setBalance] = useState("NA");
     const [bankLoading, setBankLoading] = useState(false);
+    const [sent, setSent] = useState(false);
+    const [closed, setClosed] = useState(false);
     const stake = useStake();
+    // const openDialog = !closed && !stake.loading && sent;
+    const openDialog = true;
 
     const bankExecuted = useRef(false);
     const bank = useBank();
@@ -151,6 +157,7 @@ const WalletComponent: React.FC = () => {
     const handleStake = () => {
         const uluna = math.times(new BigNumber(lunaAmount), new BigNumber(10).pow(6));
         stake.execute(uluna);
+        setSent(true);
     }
     const [lunaAmount, setLunaAmount] = useState(0);
     const [percentage, setPercentage] = useState("0%");
@@ -171,17 +178,29 @@ const WalletComponent: React.FC = () => {
     }
     if (!availableConnectTypes.includes(ConnectType.EXTENSION))
         return <></>;
+    const statusProps: StakeStatusProps = {
+        open: !stake.loading && !stake.noted,
+        message: !!stake.error ? "Failed: " + stake.error : "Success",
+        severity: !!stake.error ? "error" : "success",
+        onClose: () => { stake.setNoted(true); bank.execute(); },
+    }
     return <>
-        <PaperContent bottomPadding darker>
+        <StakeStatusWrapper>
+            <StakeStatus  {...statusProps} />
+        </StakeStatusWrapper>
+        <PaperContent topPadding bottomPadding darker>
             <LabelWithValue
                 label="Your Address"
                 value={<MiddleEllipsisText>{wallet.wallets[0]?.terraAddress}</MiddleEllipsisText>}
             />
-
-            <LabelWithValue
+            {/* <LabelWithValue
                 label="RockX Address"
                 value={<MiddleEllipsisText>{ROCKX_VALIDATOR}</MiddleEllipsisText>}
-            />
+            />   */}
+             <LabelWithValue
+                label="RockX Address"
+                value={<CopyContentButton content={ROCKX_VALIDATOR}/>}
+            />         
             <AssetInfo
                 label={"Available to Stake"}
                 value={`${lunaBalance} Luna`}
@@ -225,22 +244,25 @@ const WalletComponent: React.FC = () => {
 
 const PaperWrapper = styled('div')({
     maxWidth: '600px',
-    margin: '70px auto 0',
+    margin: '30px auto 0',
     position: 'relative',
 });
 
-export default () => {
+// export default () => {
 
-    const [chainOptions, setChainOptions] = useState<WalletControllerChainOptions | null>(null);
+//     const [chainOptions, setChainOptions] = useState<WalletControllerChainOptions | null>(null);
 
-    useEffect(() => { if (!chainOptions) getChainOptions().then(value => setChainOptions(value)); });
+//     useEffect(() => { if (!chainOptions) getChainOptions().then(value => setChainOptions(value)); });
 
-    if (!chainOptions)
-        return <></>;
+//     if (!chainOptions)
+//         return <></>;
 
-    return (<PaperWrapper>
-        {/* <WalletProvider {...chainOptions}> */}
-        <WalletComponent />
-        {/* </WalletProvider> */}
-    </PaperWrapper>)
-};
+//     return (
+//     <PaperWrapper>
+//         {/* <WalletProvider {...chainOptions}> */}
+//         <WalletComponent />
+//         {/* </WalletProvider> */}
+//      </PaperWrapper>
+//     )
+// };
+export default WalletComponent
