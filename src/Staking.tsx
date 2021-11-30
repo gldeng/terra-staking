@@ -20,6 +20,7 @@ import BigNumber from 'bignumber.js'
 import { createStyles, withStyles } from '@mui/styles';
 import * as customColors from './theme/colors';
 import { ROCKX_VALIDATOR } from './config';
+import useStake from './api/useStake';
 
 // const transition = "all 1s ease-out, border 0.5s ease-out";
 const depositNavigationBreakpoint = "md";
@@ -135,25 +136,22 @@ const WalletComponent: React.FC = () => {
     const { chainID, lcd: URL } = connectedWallet?.network ?? { chainID: "", lcd: "" };
     // const [balance, setBalance] = useState("NA");
     const [bankLoading, setBankLoading] = useState(false);
-    // const lcd = useMemo(() => new LCDClient({ chainID, URL }), [chainID, URL])
-    // useEffect(()=>{
-    //     const fcd = (wallet.network as unknown as {fcd: string}).fcd;
-    //     !!fcd && !!address && fetch(`${fcd}/v1/bank/${address}`).then()
-    //     https://bombay-fcd.terra.dev/v1/bank/terra1kh6fktd34uudtxpndcqr5vc88z5xhu46ky2hpa?
-    // });
+    const stake = useStake();
 
     const bankExecuted = useRef(false);
     const bank = useBank();
     const ulunaBalance = bank.data?.balance?.find(b => b.denom === 'uluna')?.delegatable ?? '0';
     const lunaBalance = format.amount(ulunaBalance, 6);
-    const availableLuna = new BigNumber(lunaBalance);
     useEffect(() => {
         if (!bankExecuted.current) {
             bank.execute();
             bankExecuted.current = true;
         }
     });
-
+    const handleStake = () => {
+        const uluna = math.times(new BigNumber(lunaAmount), new BigNumber(10).pow(6));
+        stake.execute(uluna);
+    }
     const [lunaAmount, setLunaAmount] = useState(0);
     const [percentage, setPercentage] = useState("0%");
     const [errorText, setErrorText] = useState("");
@@ -218,7 +216,7 @@ const WalletComponent: React.FC = () => {
             {/* <Stake /> */}
             {connected &&
                 <ActionButtonWrapper>
-                    <ActionButton disabled={!!errorText} onClick={() => { }} >Stake</ActionButton>
+                    <ActionButton disabled={!!errorText} onClick={handleStake} >Stake</ActionButton>
                 </ActionButtonWrapper>
             }
         </PaperContent>
