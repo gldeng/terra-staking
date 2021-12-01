@@ -7,6 +7,7 @@ import { ConnectType, getChainOptions, useWallet, WalletControllerChainOptions, 
 import { ActionButtonWrapper, ActionButton } from './components/Buttons';
 import { MarkText } from './components/TypographyHelpers';
 import { useEffect, useState } from 'react';
+import { Alert, Button } from '@mui/material';
 
 const ConnectWallet = () => {
     const wallet = useWallet();
@@ -30,16 +31,30 @@ const ConnectWallet = () => {
 
 const Wallet = () => {
     const wallet = useWallet();
+    const initializing = wallet.status === WalletStatus.INITIALIZING;
     const connected = wallet.status === WalletStatus.WALLET_CONNECTED;
-    return (
-        <BridgePurePaper>
-            {!connected && <ConnectWallet />}
-            {connected && <TransactionTypeTabs />}
+    const needInstallExtension = wallet.availableInstallTypes.includes(ConnectType.EXTENSION);
+    useEffect(() => {
+        if (!initializing && !connected)
+            if (wallet.availableConnectTypes.includes(ConnectType.EXTENSION))
+                wallet.connect(ConnectType.EXTENSION);
+    }, [wallet]);
+
+    return (<>
+        {needInstallExtension &&
+            <Alert severity={'error'}>
+                {'Please install Terra Station Google Extension'}
+                <Button onClick={() => wallet.install(ConnectType.EXTENSION)}>Install</Button>
+            </Alert>
+        }
+        {connected && <BridgePurePaper>
+            <TransactionTypeTabs />
             <Routes>
                 <Route path='stake' element={<Staking />} />
                 <Route path='unstake' element={<Unstaking />} />
             </Routes>
-        </BridgePurePaper>)
+        </BridgePurePaper>}
+    </>);
 }
 
 export default () => {
