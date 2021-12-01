@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectType, useConnectedWallet, useWallet, WalletControllerChainOptions, WalletStatus } from '@terra-money/wallet-provider';
 import { Input, ExitToApp } from '@mui/icons-material';
 import { Box, Button, ButtonProps, Paper, Toolbar, styled, Typography, Link, Theme, ButtonGroup, ToggleButton, Grid, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { Stake } from './Stake';
+// import { Stake } from './Stake';
 import { BigCurrencyInput } from './components/BigCurrencyInput';
 import {
     WalletProvider,
@@ -191,7 +191,7 @@ const WalletComponent: React.FC = () => {
         <PaperContent topPadding bottomPadding darker>
             <LabelWithValue
                 label="Your Address"
-                value={<MiddleEllipsisText>{wallet.wallets[0]?.terraAddress}</MiddleEllipsisText>}
+                value={<MiddleEllipsisText>{address}</MiddleEllipsisText>}
             />
             {/* <LabelWithValue
                 label="RockX Address"
@@ -210,7 +210,7 @@ const WalletComponent: React.FC = () => {
                 <Grid item xs={8}>
                     <StyledToggleButtonGroup >
                         <Button onClick={() => { presetValue(0.25) }}>25%</Button>
-                        <Button onClick={() => { presetValue(0.5) }}>55%</Button>
+                        <Button onClick={() => { presetValue(0.5) }}>50%</Button>
                         <Button onClick={() => { presetValue(0.75) }}>75%</Button>
                         <Button onClick={() => { presetValue(1) }}>100%</Button>
                     </StyledToggleButtonGroup>
