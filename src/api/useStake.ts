@@ -12,14 +12,18 @@ export default () => {
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<any>(null)
     const [noted, setNoted] = useState(true)
-    const execute = useCallback(async (ulunaAmount) => {
+    type ExecuteArgs = {
+        validatorAddress: string;
+        ulunaAmount: string | number;
+    }
+    const execute = useCallback(async ({ validatorAddress, ulunaAmount }: ExecuteArgs) => {
         try {
             setLoading(true)
             setData(null)
             setError(null)
             if (!wallet)
                 setError('No valid wallet.');
-            const msg = new MsgDelegate(address, ROCKX_VALIDATOR, new Coin('uluna', ulunaAmount));
+            const msg = new MsgDelegate(address, validatorAddress, new Coin('uluna', ulunaAmount));
 
             const { result, success } = await wallet.post({
                 msgs: [msg],

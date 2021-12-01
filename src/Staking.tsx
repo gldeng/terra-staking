@@ -82,6 +82,7 @@ const WalletComponent: React.FC = () => {
     const wallet = useWallet();
     const { availableConnectTypes } = wallet;
     const connected = wallet.status === WalletStatus.WALLET_CONNECTED;
+    const rockxAddress = ROCKX_VALIDATOR[wallet.network.name];
     const address = wallet.wallets[0]?.terraAddress ?? '';
 
     const stake = useStake();
@@ -92,7 +93,10 @@ const WalletComponent: React.FC = () => {
         const ulunaBalance = bank.data?.balance?.find(b => b.denom === 'uluna')?.delegatable ?? '0';
         return {
             lunaBalance: uToLuna(ulunaBalance),
-            handleStake: () => stake.execute(lunaToU(lunaAmount)),
+            handleStake: () => stake.execute({
+                validatorAddress: rockxAddress,
+                ulunaAmount: lunaToU(lunaAmount),
+            }),
         };
     })();
     useEffect(() => {
@@ -133,12 +137,16 @@ const WalletComponent: React.FC = () => {
         </StakeStatusWrapper>
         <PaperContent topPadding bottomPadding darker>
             <LabelWithValue
+                label="Network"
+                value={`${wallet.network.name}: ${wallet.network.chainID}`}
+            />
+            <LabelWithValue
                 label="Your Address"
                 value={<MiddleEllipsisText>{address}</MiddleEllipsisText>}
             />
             <LabelWithValue
                 label="RockX Address"
-                value={<CopyContentButton content={ROCKX_VALIDATOR} />}
+                value={<CopyContentButton content={rockxAddress} />}
             />
             <AssetInfo
                 label={"Available to Stake"}
@@ -165,18 +173,10 @@ const WalletComponent: React.FC = () => {
                 />
             </BigCurrencyInputWrapper>
 
-            {!connected &&
-                <ActionButtonWrapper>
-                    <ActionButton onClick={() => wallet.connect(ConnectType.EXTENSION)} >Connect</ActionButton>
-                </ActionButtonWrapper>
-            }
+            <ActionButtonWrapper>
+                <ActionButton disabled={!!errorText || !rockxAddress} onClick={handleStake} >Stake</ActionButton>
+            </ActionButtonWrapper>
 
-            {/* <Stake /> */}
-            {connected &&
-                <ActionButtonWrapper>
-                    <ActionButton disabled={!!errorText} onClick={handleStake} >Stake</ActionButton>
-                </ActionButtonWrapper>
-            }
         </PaperContent>
     </>;
 }

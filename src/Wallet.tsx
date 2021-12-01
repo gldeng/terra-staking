@@ -1,5 +1,5 @@
 import { BridgePurePaper, PaperContent, PaperHeader } from './components/Paper';
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import Staking from './Staking';
 import Unstaking from './Unstaking';
 import { TransactionTypeTabs } from './components/TransactionTypeTabs';
@@ -8,6 +8,7 @@ import { ActionButtonWrapper, ActionButton } from './components/Buttons';
 import { MarkText } from './components/TypographyHelpers';
 import { useEffect, useState } from 'react';
 import { Alert, Button } from '@mui/material';
+import * as features from './features';
 
 const ConnectWallet = () => {
     const wallet = useWallet();
@@ -30,6 +31,7 @@ const ConnectWallet = () => {
 }
 
 const Wallet = () => {
+    const navigate = useNavigate();
     const wallet = useWallet();
     const initializing = wallet.status === WalletStatus.INITIALIZING;
     const connected = wallet.status === WalletStatus.WALLET_CONNECTED;
@@ -38,7 +40,9 @@ const Wallet = () => {
         if (!initializing && !connected)
             if (wallet.availableConnectTypes.includes(ConnectType.EXTENSION))
                 wallet.connect(ConnectType.EXTENSION);
-    }, [wallet]);
+        if (connected)
+            navigate('stake');
+    }, [wallet, connected, initializing]);
 
     return (<>
         {needInstallExtension &&
@@ -48,10 +52,10 @@ const Wallet = () => {
             </Alert>
         }
         {connected && <BridgePurePaper>
-            <TransactionTypeTabs />
+            {features.unstaking && <TransactionTypeTabs />}
             <Routes>
                 <Route path='stake' element={<Staking />} />
-                <Route path='unstake' element={<Unstaking />} />
+                {features.unstaking && <Route path='unstake' element={<Unstaking />} />}
             </Routes>
         </BridgePurePaper>}
     </>);
