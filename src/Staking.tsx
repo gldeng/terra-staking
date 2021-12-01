@@ -76,7 +76,7 @@ const BigCurrencyInputWrapper = styled("div")({
 });
 
 const lunaToU = (luna: string | number) => math.times(new BigNumber(luna), new BigNumber(10).pow(6));
-const uToLuna = (u: string | number) => format.amount(u, 6);
+const uToLuna = (u: string) => format.amount(u, 6);
 
 const WalletComponent: React.FC = () => {
     const wallet = useWallet();
