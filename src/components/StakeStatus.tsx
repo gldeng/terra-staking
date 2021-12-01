@@ -25,8 +25,6 @@ const styles = createStyles({
 });
 
 export const StakeStatus: FC<StakeStatusProps> = ({ message, open, severity, onClose }) => {
-    const stake = useStake();
-    const openDialog = !stake.loading && !stake.noted;
     return (<Dialog
         open={open}
         onClose={onClose}
@@ -59,11 +57,3 @@ export const StakeStatusWrapper = styled('div')({
         // },
     },
 })
-
-// export const StakeStatus = () => {
-//     return <StakeStatusWrapper>
-//         <StakeStatusInner />
-//     </StakeStatusWrapper>
-// }
-
-// export default StakeStatus
