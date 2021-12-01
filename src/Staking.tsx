@@ -129,7 +129,7 @@ const WalletComponent: React.FC = () => {
         open: !stake.loading && !stake.noted,
         message: !!stake.error ? "Failed: " + stake.error : "Success",
         severity: !!stake.error ? "error" : "success",
-        onClose: () => { stake.setNoted(true); bank.execute(); },
+        onClose: () => { stake.setNoted(true); bank.execute(); setLunaAmount(0); },
     }
     return <>
         <StakeStatusWrapper>

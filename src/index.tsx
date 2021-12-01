@@ -3,13 +3,25 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { ThemeProvider } from '@mui/material';
-
+import { AppBar, Box, ThemeProvider, Toolbar } from '@mui/material';
+import Logo from './assets/rockx_logo.3b324084.png';
 
 import { lightTheme } from "./theme/theme";
 
 ReactDOM.render(
   <ThemeProvider theme={lightTheme}>
+    <AppBar position="static" color="transparent">
+      <Toolbar disableGutters sx={{ background: "#101c3d" }}>
+        <Box
+          component="img"
+          sx={{
+            height: 64,
+          }}
+          alt="Rock X"
+          src={Logo}
+        />
+      </Toolbar>
+    </AppBar>
     <App />
   </ThemeProvider>,
   document.getElementById('root'),

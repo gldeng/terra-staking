@@ -1,37 +1,58 @@
-import { AppBar, Box, Switch, Toolbar } from "@mui/material";
-import React, { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Staking from "./Staking";
-import Unstaking from "./Unstaking";
-import Wallet from "./Wallet";
-import Logo from './assets/rockx_logo.3b324084.png';
-function App() {
-  return (
-    <>
-      <AppBar position="static" color="transparent">
-        <Toolbar disableGutters sx={{ background: "#101c3d" }}>
-          <Box
-            component="img"
-            sx={{
-              height: 64,
-            }}
-            alt="Rock X"
-            src={Logo}
-          />
+import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
+import { BridgePurePaper } from './components/Paper';
+import { TransactionTypeTabs } from './components/TransactionTypeTabs';
+import { ConnectType, getChainOptions, useWallet, WalletControllerChainOptions, WalletProvider, WalletStatus } from '@terra-money/wallet-provider';
+import { useEffect, useState } from 'react';
+import { Alert, Button } from '@mui/material';
+import Staking from './Staking';
+import Unstaking from './Unstaking';
+import * as features from './features';
 
-        </Toolbar>
-      </AppBar>
-      <Router>
-        <Wallet />
-        {/* <Routes>
-        <Route path='/' element={<Staking />}/>
-              <Route path='unstake' element={<Unstaking />} /> */}
-        {/* <Route path={'/'} element={<Wallet/>} /> */}
-        {/* <Redirect from={'/'} to={'/w'} /> */}
-        {/* </Routes> */}
-      </Router>
-    </>
-  );
+const Terra = () => {
+  const navigate = useNavigate();
+  const wallet = useWallet();
+  const initializing = wallet.status === WalletStatus.INITIALIZING;
+  const connected = wallet.status === WalletStatus.WALLET_CONNECTED;
+  const needInstallExtension = wallet.availableInstallTypes.includes(ConnectType.EXTENSION);
+  useEffect(() => {
+    if (!initializing && !connected)
+      if (wallet.availableConnectTypes.includes(ConnectType.EXTENSION))
+        wallet.connect(ConnectType.EXTENSION);
+    if (connected)
+      navigate('stake');
+  }, [wallet, connected, initializing]);
+
+  return (<>
+    {needInstallExtension &&
+      <Alert severity={'error'}>
+        {'Please install Terra Station Chrome Extension'}
+        <Button onClick={() => wallet.install(ConnectType.EXTENSION)}>Install</Button>
+      </Alert>
+    }
+    {connected && <BridgePurePaper>
+      {features.unstaking && <TransactionTypeTabs />}
+      <Routes>
+        <Route path='stake' element={<Staking />} />
+        {features.unstaking && <Route path='unstake' element={<Unstaking />} />}
+      </Routes>
+    </BridgePurePaper>}
+  </>);
+}
+
+function App() {
+
+  const [chainOptions, setChainOptions] = useState<WalletControllerChainOptions | null>(null);
+
+  useEffect(() => { if (!chainOptions) getChainOptions().then(value => setChainOptions(value)); });
+
+  if (!chainOptions)
+    return <></>;
+
+  return (<WalletProvider {...chainOptions}>
+    <Router>
+      <Terra />
+    </Router>
+  </WalletProvider>);
 }
 
 export default App;
