@@ -43,7 +43,7 @@ const Wallet = () => {
     return (<>
         {needInstallExtension &&
             <Alert severity={'error'}>
-                {'Please install Terra Station Google Extension'}
+                {'Please install Terra Station Chrome Extension'}
                 <Button onClick={() => wallet.install(ConnectType.EXTENSION)}>Install</Button>
             </Alert>
         }
