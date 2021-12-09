@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectType, useWallet, WalletStatus } from '@terra-money/wallet-provider';
 import { Button, ButtonProps, styled, Theme, ButtonGroup, Grid } from '@mui/material';
 import { BigCurrencyInput } from './components/BigCurrencyInput';
@@ -85,19 +85,23 @@ const WalletComponent: React.FC = () => {
 
     const unstake = useUnstake();
     const [validatorAddress, setValidatorAddress] = useState("");
+    const [lunaAmount, setLunaAmount] = useState(0);
+    const [percentage, setPercentage] = useState("0%");
+    const [errorText, setErrorText] = useState("");
 
     const bankExecuted = useRef(false);
     const bank = useBank();
-    const { lunaStaked, handleUnstake } = (() => {
-        const ulunaStaked = bank?.data?.delegations?.find(delegation => delegation.validator_address == validatorAddress)?.amount ?? '0';
-        return {
-            lunaStaked: uToLuna(ulunaStaked),
-            handleUnstake: () => unstake.execute({
-                validatorAddress: validatorAddress,
-                ulunaAmount: lunaToU(lunaAmount),
-            }),
-        };
-    })();
+    const lunaStaked = useMemo(
+        () => {
+            const ulunaStaked = bank?.data?.delegations?.find(delegation => delegation.validator_address == validatorAddress)?.amount ?? '0';
+            return uToLuna(ulunaStaked);
+        }, [bank, validatorAddress, unstake.noted]
+    );
+    const handleUnstake = useCallback(()=> unstake.execute({
+        validatorAddress: validatorAddress,
+        ulunaAmount: lunaToU(lunaAmount),
+    }), [unstake, validatorAddress, lunaAmount]);
+
     useEffect(() => {
         if (!bankExecuted.current) {
             bank.execute();
@@ -110,9 +114,6 @@ const WalletComponent: React.FC = () => {
         setLunaAmount(0);
     }
 
-    const [lunaAmount, setLunaAmount] = useState(0);
-    const [percentage, setPercentage] = useState("0%");
-    const [errorText, setErrorText] = useState("");
     const checkAndSetAmount = (value: number) => {
         setLunaAmount(value);
         const x = math.div(new BigNumber(value), new BigNumber(lunaStaked));
