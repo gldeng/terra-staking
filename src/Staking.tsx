@@ -174,7 +174,7 @@ const WalletComponent: React.FC = () => {
             </BigCurrencyInputWrapper>
 
             <ActionButtonWrapper>
-                <ActionButton disabled={!!errorText || !rockxAddress} onClick={handleStake} >Stake</ActionButton>
+                <ActionButton disabled={!!errorText || !rockxAddress || lunaAmount < 0.000001} onClick={handleStake} >Stake</ActionButton>
             </ActionButtonWrapper>
 
         </PaperContent>

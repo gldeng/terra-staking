@@ -28,6 +28,7 @@ const labelWithValueStyles = (theme:Theme) => createStyles({
   },
   labelWrapper: {
     flexShrink: 0,
+    minWidth: '80px',
     maxWidth: "50%",
     color: theme.palette.grey[600],
   },
