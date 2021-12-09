@@ -91,11 +91,12 @@ const WalletComponent: React.FC = () => {
 
     const bankExecuted = useRef(false);
     const bank = useBank();
+    const reloadBankDelayed = () => setTimeout(()=> bank.execute(), 10_000);
     const lunaStaked = useMemo(
         () => {
             const ulunaStaked = bank?.data?.delegations?.find(delegation => delegation.validator_address == validatorAddress)?.amount ?? '0';
             return uToLuna(ulunaStaked);
-        }, [bank, validatorAddress, unstake.noted]
+        }, [bank.data, validatorAddress]
     );
     const handleUnstake = useCallback(()=> unstake.execute({
         validatorAddress: validatorAddress,
@@ -134,7 +135,7 @@ const WalletComponent: React.FC = () => {
         open: !unstake.loading && !unstake.noted,
         message: !!unstake.error ? "Failed: " + unstake.error : "Success",
         severity: !!unstake.error ? "error" : "success",
-        onClose: () => { unstake.setNoted(true); bank.execute(); setLunaAmount(0); },
+        onClose: () => { unstake.setNoted(true); reloadBankDelayed(); setLunaAmount(0); },
     }
     return <>
         <StakeStatusWrapper>
@@ -180,7 +181,7 @@ const WalletComponent: React.FC = () => {
             </BigCurrencyInputWrapper>
 
             <ActionButtonWrapper>
-                <ActionButton disabled={!!errorText || !validatorAddress} onClick={handleUnstake} color={'error'} >Unstake</ActionButton>
+                <ActionButton disabled={!!errorText || !validatorAddress  || lunaAmount < 0.000001} onClick={handleUnstake} color={'error'} >Unstake</ActionButton>
             </ActionButtonWrapper>
 
         </PaperContent>
